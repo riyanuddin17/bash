@@ -1,0 +1,57 @@
+#!/bin/bash
+
+LOG_FILE="/var/log/nginx/nginx.log"
+OUTPUT_FILE="/home/devops/log/extracted_logs_$(date +'%Y%m%d_%H%M%S').txt"
+INFO=$(grep "error" "$LOG_FILE")
+
+echo "$INFO" > "$OUTPUT_FILE"
+
+
+###############################(OR)####################################
+
+
+#!/bin/bash
+
+LOG_FILE="/var/log/nginx/nginx.log"
+OUTPUT_FILE="/home/devops/log/extracted_logs_$(date +'%Y%m%d_%H%M%S').txt"
+INFO=$(grep "error" "$LOG_FILE")
+
+# Check if the log file exists
+if [ ! -f "$LOG_FILE" ]; then
+  echo "Error: Log file $LOG_FILE not found."
+  exit 1
+fi
+
+# Create the output directory if it doesn't exist
+mkdir -p "$(dirname "$OUTPUT_FILE")"
+
+# Parse log file and extract lines containing "error"
+echo "$INFO" > "$OUTPUT_FILE"
+
+# Check if errors were found
+if [ -s "$OUTPUT_FILE" ]; then
+  echo "Errors found in the log file. Sending alert..."
+  
+  # Replace the email address with your recipient's address
+  RECIPIENT="your@email.com"
+  
+  # Replace the email subject with your subject
+  SUBJECT="Log Alert - Errors Found"
+  
+  # Send the email
+  mailx -s "$SUBJECT" "$RECIPIENT" < "$OUTPUT_FILE"
+  
+  # Check the exit status of the mail command
+  if [ $? -eq 0 ]; then
+    echo "Email sent successfully."
+  else
+    echo "Failed to send email."
+  fi
+else
+  echo "No errors found in the log file."
+fi
+
+echo "Script executed successfully."
+
+
+#####################(OR)################################
