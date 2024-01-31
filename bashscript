@@ -1,0 +1,46 @@
+######################################
+## SCENARIO 1
+######################################
+#Using for loop with if elif and else
+#!/bin/bash
+for i in {1..10}; do
+    if [ $((i % 2)) -eq 0 ]; then
+        echo "$i is even"
+    elif [ $((i % 3)) -eq 0 ]; then
+        echo "$i is divisible by 3"
+    else
+        echo "$i is not even and not divisible by 3"
+    fi
+done
+
+##########################
+## SCENARIO 2
+##########################
+#Using for loop with array
+#!/bin/bash
+
+numbers=(1 2 3 4 5 6 7 8 9 10)
+
+for i in "${numbers[@]}"; do
+    if [ $((i % 2)) -eq 0 ]; then
+        echo "$i is even"
+    elif [ $((i % 3)) -eq 0 ]; then
+        echo "$i is divisible by 3"
+    else
+        echo "$i is not even and not divisible by 3"
+    fi
+done
+
+###########################
+## Scenar#!/bin/bash
+
+for (( i=1; i<=10; i++ )); do
+    if [ $((i % 2)) -eq 0 ]; then
+        echo "Provisioning VM $i with an even number, IP: 192.168.0.$i"
+    elif [ $((i % 3)) -eq 0 ]; then
+        echo "Provisioning VM $i divisible by 3, IP: 192.168.0.$i"
+    else
+        echo "Provisioning VM $i with neither condition, IP: 192.168.0.$i"
+    fi
+done
+
