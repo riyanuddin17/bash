@@ -1,0 +1,28 @@
+#!/bin/bash
+#to automate log analysis and monitoring tasks. For example, you can write scripts to parse log files, extract relevant information, and trigger alerts based on predefined conditions.
+# Update package lists and upgrade installed packages
+echo "Updating package lists and upgrading installed packages..."
+sudo apt update && sudo apt upgrade -y
+
+# Clean up unused packages and cache
+echo "Cleaning up unused packages and cache..."
+sudo apt autoremove -y
+sudo apt autoclean
+
+# Check for and apply security patches
+echo "Checking for and applying security patches..."
+sudo apt update && sudo apt upgrade -y
+
+# Perform disk cleanup
+echo "Performing disk cleanup..."
+sudo du -sh /var/cache/apt
+sudo apt clean
+
+# User management tasks
+# Example: Creating a new user
+# echo "Creating a new user..."
+# sudo adduser newusername
+
+# Add any other maintenance tasks here...
+
+echo "Maintenance tasks completed."
