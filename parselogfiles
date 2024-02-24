@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Define the log file to monitor
+LOG_FILE="/path/to/your/log/file.log"
+
+# Define the pattern to search for
+PATTERN="ERROR"
+
+# Define the threshold for triggering an alert (number of occurrences)
+THRESHOLD=5
+
+# Function to check if the pattern exceeds the threshold
+check_threshold() {
+    occurrences=$(grep -c "$PATTERN" "$LOG_FILE")
+    if [ $occurrences -ge $THRESHOLD ]; then
+        echo "Alert: Pattern '$PATTERN' found $occurrences times in $LOG_FILE"
+        # Add your alerting mechanism here (e.g., sending an email, triggering a notification)
+    fi
+}
+
+# Main loop to continuously monitor the log file
+while true; do
+    # Check if the log file exists
+    if [ -e "$LOG_FILE" ]; then
+        check_threshold
+    else
+        echo "Error: Log file $LOG_FILE not found."
+        exit 1
+    fi
+    # Adjust the sleep duration according to your monitoring frequency
+    sleep 60  # Check every minute
+done
