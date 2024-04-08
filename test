@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  replicas: 1  
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2  
+        ports:
+        - containerPort: 80
+        - containerPort: 443  
+        volumeMounts: #Container mount
+        - name: site-content
+          mountPath: /usr/share/nginx/html
+        - name: nginx-conf
+          mountPath: /etc/nginx/nginx.conf
+        - name: htpasswd
+          mountPath: /etc/nginx/.htpasswd  
+        - name: nginx-logs 
+          mountPath: /var/log/nginx
+      volumes:  # Host mount
+        - name: site-content
+          hostPath: /home/ubuntu/src/site-content/  
+        - name: nginx-conf
+          configMap:
+            name: nginx-config  # Create a ConfigMap for nginx.web.conf
+        - name: htpasswd
+          secret:  # Create a Secret for .htpasswd (optional for sensitive data)
+            name: nginx-htpasswd  # Adjust secret name if needed
+        - name: nginx-logs
+          emptyDir: {}  # EmptyDir for container-local log storage
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: 'true' #Cross zone loadbalancing
+    service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0  
+spec:
+  selector:
+    app: nginx
+  type: LoadBalancer 
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  - protocol: TCP  
+    port: 443
+    targetPort: 443
+---
