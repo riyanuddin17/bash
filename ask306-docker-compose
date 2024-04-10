@@ -1,0 +1,283 @@
+version: '3'
+
+services:
+  web:
+    image: nginx:1.14.2
+    volumes:
+      - /home/ubuntu/src/site-content/:/usr/share/nginx/html
+      - ./nginx.web.conf:/etc/nginx/nginx.conf
+      - ./.htpasswd:/etc/nginx/.htpasswd
+      - /var/log/nginx:/var/log/nginx
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - ui
+      - canva
+      - backend
+      - auth-ms
+    networks:
+      - my-network
+
+################ START  UI ###########################
+
+  ui:
+    image: "manu-process-web:latest"
+    volumes:
+      - ./nginx.ui.conf:/etc/nginx/nginx.conf
+      - /var/log/nginx:/var/log/nginx
+    environment:
+      - POSTGRES_PASSWORD=V3r1R33E4SYp@ssw04d
+      - BASE_URL=http://app.thinkdigits.com
+      - UI_URL=http://app.thinkdigits.com
+      - AUTH_BASE_URL=http://app.thinkdigits.com/auth-ms
+      - SERVICE_BASE_URL=http://app.thinkdigits.com/edge-api
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    networks:
+      - my-network
+
+#################### END ui ############################
+
+
+################## START Backend DB, backend ##############################
+
+#Backend DB
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - "54322:5432"
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=V3r1R33E4SYp@ssw04d
+    networks:
+      - my-network
+
+  backend:
+    image: "ask360-backend:latest"
+    volumes:
+      - /home/ubuntu/src/ask360-v2/.dev.env:/usr/src/app/.dev.env
+    environment:
+      - GEN_IQ_URL=http://src-superset-gen-iq-1:3939/generate/chart
+    restart: unless-stopped
+    depends_on:
+      - db
+    networks:
+      - my-network
+
+################## END Backend DB, backend ##############################
+
+
+
+################## START Auth-ms-db, auth-ms ############################
+
+#Auth-ms db 
+
+  db-auth-ms:
+    image: postgres
+    restart: always
+    ports:
+      - "54321:5432"
+    volumes:
+      - ./auth-ms-db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=V3r1R33E4SYp@ssw04d
+    networks:
+      - my-network
+
+  auth-ms:
+    # image: "613992964901.dkr.ecr.us-east-1.amazonaws.com/ask360auth:oct2901"
+    image: "auth-ms:latest"
+    restart: unless-stopped
+    depends_on:
+      - db-auth-ms
+    networks:
+      - my-network
+
+################## END Auth-ms-db, auth-ms ############################
+
+
+################## START db-docker-service,  docker-service, proxy-service ############################
+
+# db-docker-service
+
+  db-docker-service:
+    image: postgres
+    restart: always
+    ports:
+      - "54324:5432"
+    volumes:
+      - ./db-docker-serivce-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=V3r1R33E4SYp@ssw04d
+      - BASE_DIR_HOST=/home/ubuntu/src/app_data
+    networks:
+      - my-network
+
+
+  docker-service:
+    image: "docker-service:latest"
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - db-docker-service
+    ports:
+      - "3300:3300"
+    environment:
+      - PASSWORD=V3r1R33E4SYp@ssw04d
+      - DB_HOST=db-docker-service
+    networks:
+      - my-network
+
+
+  proxy-service:
+    image: "proxy-service:latest"
+    restart: always
+    depends_on:
+      - db-docker-service
+    ports:
+      - "3030:3030"
+      - "3031:3031"
+    environment:
+      - PASSWORD=V3r1R33E4SYp@ssw04d
+      - DB_HOST=db-docker-service
+    networks:
+      - my-network
+
+################## END db-docker-service,  docker-service, proxy-service ############################
+
+
+
+################## START ingest-iq,  superset-gen-iq, dataset-in , node-red, canva ############################
+
+  ingest-iq:
+    image: "ingest-iq:latest"
+    environment:
+      - INGEST_IQ_STATE_URL=http://backend:3003/insights/mqtt-server-ingest-iq
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - my-network
+
+
+  superset-gen-iq:
+    image: "superset-gen-iq-image:latest"
+    environment:
+      - CHROMADB_PATH=http://src-chromadb-1:8000
+      - SUPERSET_HOST=http://54.89.102.99:8080/
+    ports:
+      - "3939:3939"
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - my-network
+
+
+  dataset-in:
+    image: "dataset-in-image:latest"
+    volumes:
+      - /home/ubuntu/src/state.json:/usr/src/app/state.json
+    environment:
+      - DB_DATABASE=postgres
+      - DB_HOST=54.89.102.99
+      - DB_PORT=8000
+      - DB_USER=postgres
+      - "DB_PASSWORD=k8jj#adkdkkd"
+      - SUPERSET_HOST=http://54.89.102.99:8080
+    ports:
+      - "3577:3577"
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - my-network
+
+
+  node-red:
+    image: "node-red-integration:latest"
+    volumes:
+      - /home/ubuntu/src/.nodered:/usr/src/app/.nodered
+    restart: unless-stopped
+    networks:
+      - my-network
+
+  canva:
+    image: "ask360-canvas-n:latest"
+    volumes:
+      - ./nginx.canvas.conf:/etc/nginx/nginx.conf
+      - /var/log/nginx:/var/log/nginx
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+    networks:
+      - my-network
+
+################## END ingest-iq,  superset-gen-iq, dataset-in , node-red, canva ############################
+
+################## START DB-ask-ai, ask-ai-plot, ask-ai-db  ############################
+
+# DB-ask-ai
+
+  db-ask-ai:
+    image: postgres
+    restart: always
+    ports:
+      - "54323:5432"
+    volumes:
+      - ./ask-ai-db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=V3r1R33E4SYp@ssw04d
+    networks:
+      - my-network
+
+  ask-ai-plot:
+    image: "ask-ai-plot:latest"
+    restart: unless-stopped
+    networks:
+      - my-network
+
+  ask-ai-db:
+    image: "ask-ai-db:latest"
+    restart: unless-stopped
+    networks:
+      - my-network
+
+################## END DB-ask-ai, ask-ai-plot, ask-ai-db  ############################
+
+
+
+################## START chromadb, ask-ai-add-docs, ask-ai-docs  ############################
+
+#Chromadb part
+
+  chromadb:
+    image: chromadb/chroma
+    restart: always
+    ports:
+      - "8888:8000"
+    volumes:
+      - ./chroma-db-data:/chroma/chroma/
+    networks:
+      - my-network
+
+
+  ask-ai-add-docs:
+    image: "ask-ai-add-docs:latest"
+    restart: unless-stopped
+    networks:
+      - my-network
+
+  ask-ai-docs:
+    image: "ask-ai-docs:latest"
+    restart: unless-stopped
+    networks:
+      - my-network
+
+networks:
+  my-network:
