@@ -71,7 +71,7 @@ services:
 ################## END Backend DB, backend ##############################
 
 
-
+Q) How  auth-ms container is able to use  db-auth-ms db when we r not passing environment variables ?
 ################## START Auth-ms-db, auth-ms ############################
 
 #Auth-ms db 
@@ -153,6 +153,8 @@ services:
 
 
 ################## START ingest-iq,  superset-gen-iq, dataset-in , node-red, canva ############################
+
+Q) No environment vairables for timesecries db how is it accessing the data??
 
   ingest-iq:
     image: "ingest-iq:latest"
@@ -236,6 +238,8 @@ services:
     networks:
       - my-network
 
+Q) No environment variables passing for db ?
+
   ask-ai-plot:
     image: "ask-ai-plot:latest"
     restart: unless-stopped
@@ -266,6 +270,7 @@ services:
     networks:
       - my-network
 
+Q) No environment variables passing for db ?
 
   ask-ai-add-docs:
     image: "ask-ai-add-docs:latest"
