@@ -21,6 +21,8 @@ services:
 
 ################ START  UI ###########################
 
+ Q1) What is the updated image for UI and why are we connecting it to the db ??
+
   ui:
     image: "manu-process-web:latest"
     volumes:
@@ -71,7 +73,7 @@ services:
 ################## END Backend DB, backend ##############################
 
 
-Q) How  auth-ms container is able to use  db-auth-ms db when we r not passing environment variables ?
+Q2) How  auth-ms container is able to use  db-auth-ms db when we r not passing environment variables ?
 ################## START Auth-ms-db, auth-ms ############################
 
 #Auth-ms db 
@@ -154,7 +156,7 @@ Q) How  auth-ms container is able to use  db-auth-ms db when we r not passing en
 
 ################## START ingest-iq,  superset-gen-iq, dataset-in , node-red, canva ############################
 
-Q) No environment vairables for timesecries db how is it accessing the data??
+Q3) No environment vairables for timesecries db how is it accessing the data??
 
   ingest-iq:
     image: "ingest-iq:latest"
@@ -209,6 +211,10 @@ Q) No environment vairables for timesecries db how is it accessing the data??
     networks:
       - my-network
 
+
+
+Q4) What is this 'canva'? It is not defined anywhere in the diagram ??
+
   canva:
     image: "ask360-canvas-n:latest"
     volumes:
@@ -238,7 +244,7 @@ Q) No environment vairables for timesecries db how is it accessing the data??
     networks:
       - my-network
 
-Q) No environment variables passing for db ?
+Q5) No environment variables passing for db ?
 
   ask-ai-plot:
     image: "ask-ai-plot:latest"
@@ -270,7 +276,7 @@ Q) No environment variables passing for db ?
     networks:
       - my-network
 
-Q) No environment variables passing for db ?
+Q6) No environment variables passing for db ?
 
   ask-ai-add-docs:
     image: "ask-ai-add-docs:latest"
